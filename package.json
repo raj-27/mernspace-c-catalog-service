@@ -1,7 +1,7 @@
 {
-    "name": "auth-service",
+    "name": "catalog-service",
     "version": "1.0.0",
-    "description": "A user management service ",
+    "description": "A catalog management service ",
     "main": "index.js",
     "scripts": {
         "dev": "nodemon src/server.ts",
