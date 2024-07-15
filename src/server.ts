@@ -1,12 +1,11 @@
 import app from "./app";
-import { Config } from "./config";
 import logger from "./config/logger";
+import config from "config";
 
 const startServer = () => {
+    const PORT: number = config.get("server.port") || 5510;
     try {
-        app.listen(Config.PORT, () =>
-            logger.info(`listening on port ${Config.PORT}`),
-        );
+        app.listen(PORT, () => logger.info(`listening on port ${PORT}`));
     } catch (err) {
         if (err instanceof Error) {
             logger.error(err?.message);
