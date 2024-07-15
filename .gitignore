@@ -130,6 +130,7 @@ dist
 .pnp.*
 
 
-# yaml
-development.yaml
-production.yaml
+
+
+
+/config
