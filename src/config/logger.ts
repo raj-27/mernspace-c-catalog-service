@@ -11,7 +11,7 @@ const logger = winston.createLogger({
             dirname: "logs",
             filename: "app.log",
             level: "debug",
-            silent: !(config.get("server.NODE_ENV") === "test"),
+            silent: false,
             format: winston.format.combine(
                 winston.format.timestamp(),
                 winston.format.json(),
@@ -33,7 +33,7 @@ const logger = winston.createLogger({
                 winston.format.timestamp(),
                 winston.format.json(),
             ),
-            silent: config.get("server.NODE_ENV") === "test",
+            silent: false,
         }),
     ],
 });
