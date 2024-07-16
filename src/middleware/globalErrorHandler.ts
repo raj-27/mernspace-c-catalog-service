@@ -8,15 +8,16 @@ export default async function globalErrorHandler(
     res: Response,
     next: NextFunction,
 ) {
-    logger.error(err.message);
+    const isProduction = process.env.NODE_ENV === "production";
     const statusCode = err.statusCode || err.status || 500;
     res.status(statusCode).json({
         errors: [
             {
                 type: err.name,
                 msg: err.message,
-                path: "",
-                location: "",
+                path: req.path,
+                location: "server",
+                stack: isProduction ? null : err.stack,
             },
         ],
     });
