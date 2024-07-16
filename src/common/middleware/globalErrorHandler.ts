@@ -1,6 +1,6 @@
 import { NextFunction, Request, Response } from "express";
 import { HttpError } from "http-errors";
-import logger from "../config/logger";
+import logger from "../../config/logger";
 
 export default async function globalErrorHandler(
     err: HttpError,
@@ -10,6 +10,7 @@ export default async function globalErrorHandler(
 ) {
     const isProduction = process.env.NODE_ENV === "production";
     const statusCode = err.statusCode || err.status || 500;
+    logger.error(err.message);
     res.status(statusCode).json({
         errors: [
             {

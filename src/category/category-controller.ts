@@ -13,7 +13,6 @@ export default class CategoryController {
     async create(req: Request, res: Response, next: NextFunction) {
         const result = validationResult(req);
         if (!result.isEmpty()) {
-            console.log(result.array());
             return next(createHttpError(400, result.array()[0].msg as string));
         }
         const { name, priceConfiguration, attributes } = req.body as Category;
@@ -26,6 +25,9 @@ export default class CategoryController {
             this.logger.info(`Category created,Category id :${category._id}}`);
             res.json({ category_id: category._id });
         } catch (error) {
+            if (error instanceof Error) {
+                return next(createHttpError(400, error.message));
+            }
             return next(createHttpError(400, "Error while creating category"));
         }
     }
