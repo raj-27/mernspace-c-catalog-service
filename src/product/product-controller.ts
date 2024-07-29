@@ -3,15 +3,31 @@ import { validationResult } from "express-validator";
 import createHttpError from "http-errors";
 import ProductService from "./product-service";
 import { Product } from "./product-type";
+import cloudinary, {
+    CloudinaryStorage,
+} from "../common/service/CloudinaryStorage";
+import path from "path";
+import { FileData } from "../common/types/storage";
+import { UploadedFile } from "express-fileupload";
 
 export default class ProductController {
-    constructor(private ProductServuce: ProductService) {}
+    constructor(
+        private ProductServuce: ProductService,
+        private CloudinaryService: CloudinaryStorage,
+    ) {}
     async create(req: Request, res: Response, next: NextFunction) {
         const result = validationResult(req);
         if (!result.isEmpty()) {
             return next(createHttpError(400, result.array()[0].msg as string));
         }
-
+        const file = req.files;
+        const img = req.files!.image as UploadedFile;
+        const fileName = img.name;
+        const bufferData = img.data.buffer;
+        const imageUrl = await this.CloudinaryService.upload({
+            filename: fileName,
+            fileData: bufferData,
+        });
         // create product
         // todo => save product to database
         const {
@@ -21,7 +37,6 @@ export default class ProductController {
             attributes,
             tenantId,
             categoryId,
-            image,
         } = req.body as Product;
         const product = {
             name,
@@ -31,7 +46,7 @@ export default class ProductController {
             tenantId,
             categoryId,
             // todo => image upload
-            image: "image.png",
+            image: imageUrl,
         };
         try {
             const newProduct = await this.ProductServuce.createProduct(product);
