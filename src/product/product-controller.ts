@@ -91,7 +91,7 @@ export default class ProductController {
         let oldImage: string | undefined;
 
         if (req.files?.image) {
-            oldImage = await this.ProductServuce.getProductImage(id);
+            oldImage = _product.image;
             const image = req.files?.image as UploadedFile;
             newImage = uuidv4();
             try {
