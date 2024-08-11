@@ -18,4 +18,12 @@ export default class ProductService {
             { new: true },
         );
     }
+
+    async getProduct(productId: string): Promise<Product | null> {
+        try {
+            return await productModel.findById(productId);
+        } catch (error) {
+            return null;
+        }
+    }
 }

@@ -6,6 +6,8 @@ import { Product } from "./product-type";
 import { UploadedFile } from "express-fileupload";
 import { v4 as uuidv4 } from "uuid";
 import { FileStorage } from "../common/types/storage";
+import { AuthRequest } from "../common/types";
+import { Roles } from "../common/constants";
 
 export default class ProductController {
     constructor(
@@ -58,6 +60,7 @@ export default class ProductController {
     }
 
     async update(req: Request, res: Response, next: NextFunction) {
+        console.log(req.params.id);
         const result = validationResult(req);
         if (!result.isEmpty()) {
             return next(createHttpError(400, result.array()[0].msg as string));
@@ -66,6 +69,22 @@ export default class ProductController {
         const { id } = req.params;
         if (!id) {
             return next(createHttpError(400, "Invalid params."));
+        }
+        const _product = await this.ProductServuce.getProduct(id);
+        if (!_product) {
+            return next(createHttpError(400, "Product not found"));
+        }
+
+        if ((req as AuthRequest).auth.role !== Roles.ADMIN) {
+            const tenant_id = (req as AuthRequest).auth.tenant;
+            if (_product.tenantId !== String(tenant_id)) {
+                return next(
+                    createHttpError(
+                        400,
+                        "You are not allowed to acces this product",
+                    ),
+                );
+            }
         }
 
         let newImage: string | undefined;
