@@ -13,7 +13,7 @@ cloudinary.config({
 export default cloudinary;
 
 export class CloudinaryStorage implements FileStorage {
-    async upload(data: FileData): Promise<string> {
+    async upload(data: FileData): Promise<void> {
         const { fileData, filename } = data;
         const bufferData = Buffer.from(fileData);
         return new Promise((resolve, reject) => {
@@ -28,17 +28,17 @@ export class CloudinaryStorage implements FileStorage {
                 },
                 (err, res) => {
                     if (err) {
-                        console.log(err.message);
                         throw createHttpError(400, err.message);
                     }
-                    console.log("Upload successful:", res!.secure_url);
-                    resolve(res!.secure_url);
+                    resolve();
                 },
             );
             readableStream.pipe(stream);
         });
     }
-    async delete(filename: string): Promise<void> {}
+    async delete(filename: string): Promise<void> {
+        return await cloudinary.uploader.destroy(filename);
+    }
     async getObjectUri(filename: string): Promise<string> {
         return new Promise((res, rej) => {});
         // Your logic here
