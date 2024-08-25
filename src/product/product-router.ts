@@ -58,6 +58,12 @@ router.put(
         productControler.update(req, res, next),
 );
 
-router.put("/:id");
+router.get(
+    "/",
+    authenticate,
+    canAccess([Roles.ADMIN]),
+    (req: Request, res: Response, next: NextFunction) =>
+        productControler.getList(req, res, next),
+);
 
 export default router;
