@@ -1,5 +1,6 @@
+import { paginationLabels } from "../config/pagination";
 import productModel from "./product-model";
-import { Filter, Product } from "./product-type";
+import { Filter, PageinateQuery, Product } from "./product-type";
 
 export default class ProductService {
     async createProduct(product: Product) {
@@ -14,7 +15,11 @@ export default class ProductService {
         );
     }
 
-    async getProducts(q: string, filters: Filter) {
+    async getProducts(
+        q: string,
+        filters: Filter,
+        pageinatQuery: PageinateQuery,
+    ) {
         const searchQueryRegexp = new RegExp(q, "i");
 
         const matchQuery = {
@@ -49,8 +54,10 @@ export default class ProductService {
             },
         ]);
 
-        const result = await aggregate.exec();
-        return result as Product[];
+        return productModel.aggregatePaginate(aggregate, {
+            ...pageinatQuery,
+            customLabels: paginationLabels,
+        });
     }
 
     async getProduct(productId: string): Promise<Product | null> {

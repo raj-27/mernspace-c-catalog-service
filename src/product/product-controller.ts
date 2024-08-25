@@ -148,7 +148,7 @@ export default class ProductController {
 
     // function to get list of product
     async getList(req: Request, res: Response, next: NextFunction) {
-        const { q, tenantId, categoryId, isPublish } = req.query;
+        const { q, tenantId, categoryId, isPublish, page, limit } = req.query;
 
         const result = validationResult(req);
         if (!result.isEmpty()) {
@@ -170,6 +170,10 @@ export default class ProductController {
             const productList = await this.ProductService.getProducts(
                 q as string,
                 filters,
+                {
+                    page: parseInt(page as string) || 1,
+                    limit: parseInt(limit as string) || 10,
+                },
             );
             res.json(productList);
         } catch (error) {
