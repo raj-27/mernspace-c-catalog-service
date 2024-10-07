@@ -15,12 +15,18 @@ export default cloudinary;
 export class CloudinaryStorage implements FileStorage {
     async upload(data: FileData): Promise<void> {
         const { fileData, filename } = data;
+
         const bufferData = Buffer.from(fileData);
         return new Promise((resolve, reject) => {
             // Create a readable stream from the buffer
             const readableStream = new Readable();
             readableStream.push(bufferData);
             readableStream.push(null); // Indicate end of the stream
+            cloudinary.uploader
+                .upload(`image/${filename}.jpg`)
+                .then((res) => console.log(res))
+                .catch((err) => console.log(err));
+
             const stream = cloudinary.uploader.upload_stream(
                 {
                     public_id: `product-image/${filename.split(".")[0]}`,
@@ -39,8 +45,15 @@ export class CloudinaryStorage implements FileStorage {
     async delete(filename: string): Promise<void> {
         return await cloudinary.uploader.destroy(filename);
     }
-    async getObjectUri(filename: string): Promise<string> {
-        return new Promise((res, rej) => {});
-        // Your logic here
+    getObjectUri(filename: string): string {
+        try {
+            const imageUrl = cloudinary.url(
+                `product-image/${filename.split(".")[0]}`,
+                { secure: true },
+            );
+            return imageUrl;
+        } catch (error) {
+            throw new Error("Invalid cloudinary configuration or filename");
+        }
     }
 }

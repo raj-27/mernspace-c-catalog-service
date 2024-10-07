@@ -63,7 +63,6 @@ export default class ProductController {
 
     // functions to update product base on access level
     async update(req: Request, res: Response, next: NextFunction) {
-        console.log(req.params.id);
         const result = validationResult(req);
         if (!result.isEmpty()) {
             return next(createHttpError(400, result.array()[0].msg as string));
@@ -102,7 +101,7 @@ export default class ProductController {
                     filename: newImage,
                     fileData: image.data.buffer,
                 });
-                await this.storage.delete(oldImage as string);
+                await this.storage.delete(oldImage);
             } catch (error) {
                 if (error instanceof Error) {
                     return next(createHttpError(400, error.message));
@@ -175,7 +174,21 @@ export default class ProductController {
                     limit: parseInt(limit as string) || 10,
                 },
             );
-            res.json(productList);
+            const finalProducts = (productList.data as Product[]).map(
+                (product: Product) => {
+                    return {
+                        ...product,
+                        image: this.storage.getObjectUri(product.image),
+                    };
+                },
+            );
+
+            res.json({
+                data: finalProducts,
+                total: productList.total,
+                pageSize: productList.size,
+                currentPage: productList.page,
+            });
         } catch (error) {
             if (error instanceof Error) {
                 return next(createHttpError(400, error.message));
