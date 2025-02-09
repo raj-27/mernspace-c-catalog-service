@@ -17,22 +17,22 @@ export class CloudinaryStorage implements FileStorage {
         const { fileData, filename } = data;
 
         const bufferData = Buffer.from(fileData);
-        return new Promise((resolve, reject) => {
+        return new Promise((resolve) => {
             // Create a readable stream from the buffer
             const readableStream = new Readable();
             readableStream.push(bufferData);
             readableStream.push(null); // Indicate end of the stream
-            cloudinary.uploader
+            void cloudinary.uploader
                 .upload(`image/${filename}.jpg`)
-                .then((res) => console.log(res))
-                .catch((err) => console.log(err));
+                .then()
+                .catch();
 
             const stream = cloudinary.uploader.upload_stream(
                 {
                     public_id: `product-image/${filename.split(".")[0]}`,
                     resource_type: "image",
                 },
-                (err, res) => {
+                (err) => {
                     if (err) {
                         throw createHttpError(400, err.message);
                     }
@@ -43,7 +43,7 @@ export class CloudinaryStorage implements FileStorage {
         });
     }
     async delete(filename: string): Promise<void> {
-        return await cloudinary.uploader.destroy(filename);
+        await cloudinary.uploader.destroy(filename);
     }
     getObjectUri(filename: string): string {
         try {

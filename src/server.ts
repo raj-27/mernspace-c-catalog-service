@@ -1,16 +1,25 @@
 import app from "./app";
+import { createMessageProducerBroker } from "./common/factories/brokerFactory";
+import { MessageProducerBroker } from "./common/types/broker";
 import { initDb } from "./config/db";
 import logger from "./config/logger";
 import config from "config";
 
 const startServer = async () => {
     const PORT: number = config.get("server.port") || 5510;
+    let MessageProducerBroker: MessageProducerBroker | null = null;
     try {
         await initDb();
         logger.info("Database connected successfully");
+        // Connect to kafka
+        MessageProducerBroker = createMessageProducerBroker();
+        await MessageProducerBroker.connect();
         app.listen(PORT, () => logger.info(`listening on port ${PORT}`));
     } catch (err) {
         if (err instanceof Error) {
+            if (MessageProducerBroker) {
+                await MessageProducerBroker.disconnect();
+            }
             logger.error(err?.message);
             setTimeout(() => {
                 process.exit();
@@ -19,4 +28,4 @@ const startServer = async () => {
     }
 };
 
-startServer();
+void startServer();

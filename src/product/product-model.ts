@@ -14,7 +14,7 @@ const attributesSchema = new mongoose.Schema({
 const priceConfigurationSchema = new mongoose.Schema({
     priceType: {
         type: String,
-        enum: ["base", "additional"],
+        enum: ["base", "aditional"],
     },
     availableOptions: {
         type: Map,
@@ -51,7 +51,7 @@ const productSchema = new mongoose.Schema(
         },
         isPublish: {
             type: Boolean,
-            require: true,
+            required: true,
             default: false,
         },
     },

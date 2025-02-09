@@ -4,7 +4,7 @@ import { Attribute, Category, PriceConfiguration } from "./category-types";
 const priceConfigurationSchema = new mongoose.Schema<PriceConfiguration>({
     priceType: {
         type: String,
-        enum: ["base", "additional"],
+        enum: ["base", "aditional"],
         required: true,
     },
     availableOptions: {

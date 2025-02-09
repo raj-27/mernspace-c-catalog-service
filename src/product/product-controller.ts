@@ -9,11 +9,15 @@ import { FileStorage } from "../common/types/storage";
 import { AuthRequest } from "../common/types";
 import { Roles } from "../common/constants";
 import mongoose from "mongoose";
+import { Logger } from "winston";
+import { MessageProducerBroker } from "../common/types/broker";
 
 export default class ProductController {
     constructor(
         private ProductService: ProductService,
         private storage: FileStorage,
+        private logger: Logger,
+        private broker: MessageProducerBroker,
     ) {}
     // function to create a new product
     async create(req: Request, res: Response, next: NextFunction) {
@@ -36,19 +40,31 @@ export default class ProductController {
             attributes,
             tenantId,
             categoryId,
+            isPublish,
         } = req.body as Product;
         const product = {
             name,
             description,
-            priceConfiguration: JSON.parse(priceConfiguration),
-            attributes: JSON.parse(attributes),
+            priceConfiguration: JSON.parse(priceConfiguration) as string,
+            attributes: JSON.parse(attributes) as string,
             tenantId,
             categoryId,
             // todo => image upload
             image: imageName,
+            isPublish,
         };
         try {
             const newProduct = await this.ProductService.createProduct(product);
+
+            // Send product to kafka
+            // Todo : mover topic name to config
+            await this.broker.sendMessage(
+                "product",
+                JSON.stringify({
+                    id: newProduct._id,
+                    priceConfiguration: newProduct.priceConfiguration,
+                }),
+            );
             // todo => send response
             res.json({ id: newProduct._id });
         } catch (error) {
@@ -121,16 +137,18 @@ export default class ProductController {
             attributes,
             tenantId,
             categoryId,
+            isPublish,
         } = req.body as Product;
         const product = {
             name,
             description,
-            priceConfiguration: JSON.parse(priceConfiguration),
-            attributes: JSON.parse(attributes),
+            priceConfiguration: JSON.parse(priceConfiguration) as string,
+            attributes: JSON.parse(attributes) as string,
             tenantId,
             categoryId,
             // todo => image upload
             image: newImage ? newImage : (oldImage as string),
+            isPublish,
         };
         try {
             await this.ProductService.updateProduct(id, product);
@@ -186,14 +204,71 @@ export default class ProductController {
             res.json({
                 data: finalProducts,
                 total: productList.total,
-                pageSize: productList.size,
-                currentPage: productList.page,
+                pageSize: productList.pageSize,
+                currentPage: productList.currentPage,
             });
         } catch (error) {
             if (error instanceof Error) {
                 return next(createHttpError(400, error.message));
             }
             return next(createHttpError(400, "Interval server error"));
+        }
+    }
+
+    // Function to get product by id
+    async getProductById(req: Request, res: Response, next: NextFunction) {
+        try {
+            const { id } = req.params;
+            const product = await this.ProductService.getProduct(id);
+            if (!product) {
+                return next(createHttpError(400, `Product  not found`));
+            }
+            res.json(product);
+        } catch (error) {
+            if (error instanceof Error) {
+                return next(createHttpError(400, error.message));
+            }
+            return next(createHttpError(400, "Internal server error"));
+        }
+    }
+
+    // Function to delete a product by id
+    async deleteProductById(req: Request, res: Response, next: NextFunction) {
+        try {
+            const { productId } = req.params;
+            const product = await this.ProductService.getProduct(productId);
+            if (!product) {
+                return next(createHttpError(400, `Product not found`));
+            }
+            if ((req as AuthRequest).auth.role != Roles.ADMIN) {
+                const tenant_id = (req as AuthRequest).auth.tenant;
+                if (tenant_id != product.tenantId) {
+                    return next(
+                        createHttpError(
+                            400,
+                            "You are not allowed to acces this product",
+                        ),
+                    );
+                }
+            }
+
+            // delete image reference with this product
+            try {
+                await this.storage.delete(product.image);
+            } catch (error) {
+                return next(
+                    createHttpError(400, "Error while deleting product image"),
+                );
+            }
+            // delete product
+            await this.ProductService.deleteProduct(productId);
+            // send response to client
+            res.json({ id: productId });
+        } catch (error) {
+            if (error instanceof Error) {
+                return next(createHttpError(400, error.message));
+            }
+            return next(createHttpError(400, "Internal server error"));
         }
     }
 }

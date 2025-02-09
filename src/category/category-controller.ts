@@ -23,8 +23,10 @@ export default class CategoryController {
                 priceConfiguration,
                 attributes,
             });
-            this.logger.info(`Category created,Category id :${category._id}}`);
-            res.json({ category_id: category._id });
+            this.logger.info(
+                `Category created, Category id: ${category._id.toString()}`,
+            );
+            res.json({ category_id: category._id.toString() }); // Ensure consistency
         } catch (error) {
             if (error instanceof Error) {
                 return next(createHttpError(400, error.message));

@@ -67,4 +67,8 @@ export default class ProductService {
             return null;
         }
     }
+
+    async deleteProduct(productId: string) {
+        await productModel.findOneAndDelete({ _id: productId });
+    }
 }

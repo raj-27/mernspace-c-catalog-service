@@ -1,14 +1,11 @@
 import mongoose from "mongoose";
 
-export interface Product {
+export interface Topping {
     name: string;
-    description: string;
-    priceConfiguration: string;
-    attributes: string;
-    tenantId: string;
-    categoryId: string;
     image: string;
-    isPublish: string;
+    price: number;
+    tenantId: string;
+    isPublish: boolean;
 }
 
 export interface Filter {
