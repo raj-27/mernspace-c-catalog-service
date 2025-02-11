@@ -1,4 +1,4 @@
-import { NextFunction, Request, Response } from "express";
+import { NextFunction, Response } from "express";
 import { validationResult } from "express-validator";
 import createHttpError from "http-errors";
 import ProductService from "./product-service";
@@ -11,6 +11,7 @@ import { Roles } from "../common/constants";
 import mongoose from "mongoose";
 import { Logger } from "winston";
 import { MessageProducerBroker } from "../common/types/broker";
+import { Request } from "express-jwt";
 
 export default class ProductController {
     constructor(
@@ -151,7 +152,20 @@ export default class ProductController {
             isPublish,
         };
         try {
-            await this.ProductService.updateProduct(id, product);
+            const updatedProduct = await this.ProductService.updateProduct(
+                id,
+                product,
+            );
+
+            // Send product to kafka
+            // Todo : move topic name to the config
+            await this.broker.sendMessage(
+                "product",
+                JSON.stringify({
+                    id: updatedProduct?._id,
+                    priceConfiguration: updatedProduct?.priceConfiguration,
+                }),
+            );
             res.json({ id });
         } catch (error) {
             if (error instanceof Error) {

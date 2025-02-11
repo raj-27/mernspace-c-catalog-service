@@ -8,11 +8,13 @@ import { FileStorage } from "../common/types/storage";
 import { validationResult } from "express-validator";
 import { AuthRequest } from "../common/types";
 import { Roles } from "../common/constants";
+import { MessageProducerBroker } from "../common/types/broker";
 
 export default class ToppingController {
     constructor(
         private ToppingService: ToppingService,
         private storage: FileStorage,
+        private broker: MessageProducerBroker,
     ) {}
 
     async create(req: Request, res: Response, next: NextFunction) {
@@ -50,6 +52,10 @@ export default class ToppingController {
                 tenantId,
                 isPublish,
             });
+
+            // send message to kafka broker
+            // setting topic to "topping"
+            await this.broker.sendMessage("topping", JSON.stringify(topping));
             res.json({ id: topping._id });
         } catch (error) {
             if (error instanceof Error) {
@@ -123,6 +129,10 @@ export default class ToppingController {
             const updatedTopping = await this.ToppingService.update(
                 toppingId,
                 newTopping,
+            );
+            await this.broker.sendMessage(
+                "topping",
+                JSON.stringify(updatedTopping),
             );
             res.json({ id: updatedTopping?.id as string });
         } catch (error) {

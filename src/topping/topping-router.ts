@@ -8,12 +8,15 @@ import { CloudinaryStorage } from "../common/service/CloudinaryStorage";
 import createToppingValidator from "./create-topping-validator";
 import FileUploadMiddleware from "../common/middleware/fileUpload";
 import updateToppingValidator from "./update-topping-validator";
+import { createMessageProducerBroker } from "../common/factories/brokerFactory";
 
 const toppingService = new ToppingService();
 const cloudinaryStorage = new CloudinaryStorage();
+const broker = createMessageProducerBroker();
 const toppingController = new ToppingController(
     toppingService,
     cloudinaryStorage,
+    broker,
 );
 
 const router = express.Router();
