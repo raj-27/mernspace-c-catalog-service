@@ -12,6 +12,7 @@ import mongoose from "mongoose";
 import { Logger } from "winston";
 import { MessageProducerBroker } from "../common/types/broker";
 import { Request } from "express-jwt";
+import { mapToObject } from "../util";
 
 export default class ProductController {
     constructor(
@@ -63,7 +64,13 @@ export default class ProductController {
                 "product",
                 JSON.stringify({
                     id: newProduct._id,
-                    priceConfiguration: newProduct.priceConfiguration,
+                    // Todo: Fix the typescript error
+                    priceConfiguration: mapToObject(
+                        newProduct.priceConfiguration as unknown as Map<
+                            string,
+                            any
+                        >,
+                    ),
                 }),
             );
             // todo => send response
@@ -163,7 +170,13 @@ export default class ProductController {
                 "product",
                 JSON.stringify({
                     id: updatedProduct?._id,
-                    priceConfiguration: updatedProduct?.priceConfiguration,
+                    // Todo: Fix the typescript error
+                    priceConfiguration: mapToObject(
+                        updatedProduct?.priceConfiguration as unknown as Map<
+                            string,
+                            any
+                        >,
+                    ),
                 }),
             );
             res.json({ id });

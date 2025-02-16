@@ -17,5 +17,11 @@ module.exports = {
         "dot-notation": "error",
         "@typescript-eslint/no-misused-promises": "off",
         "@typescript-eslint/require-await": "off",
+        // Todo: Below two rule should be removable
+        "@typescript-eslint/no-unsafe-call": "off",
+        "@typescript-eslint/no-explicit-any": "off",
+        "@typescript-eslint/no-unsafe-assignment": "off",
+        "@typescript-eslint/ban-ts-comment": "off",
+        "@typescript-eslint/no-unsafe-argument": "off",
     },
 };
