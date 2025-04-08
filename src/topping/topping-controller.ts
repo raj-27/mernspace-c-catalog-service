@@ -1,6 +1,6 @@
 import { NextFunction, Request, Response } from "express";
 import ToppingService from "./topping-service";
-import { Filter, Topping } from "./topping-type";
+import { Filter, Topping, ToppingEvents } from "./topping-type";
 import createHttpError from "http-errors";
 import { UploadedFile } from "express-fileupload";
 import { v4 as uuidv4 } from "uuid";
@@ -55,7 +55,15 @@ export default class ToppingController {
 
             // send message to kafka broker
             // setting topic to "topping"
-            await this.broker.sendMessage("topping", JSON.stringify(topping));
+            const brokerMessage = {
+                event_type: ToppingEvents.TOPPING_CREATE,
+                data: topping,
+            };
+            await this.broker.sendMessage(
+                "topping",
+                JSON.stringify(brokerMessage),
+                topping?._id?.toString(),
+            );
             res.json({ id: topping._id });
         } catch (error) {
             if (error instanceof Error) {
@@ -130,9 +138,14 @@ export default class ToppingController {
                 toppingId,
                 newTopping,
             );
+            const brokerMessage = {
+                event_type: ToppingEvents.TOPPING_UPDATE,
+                data: updatedTopping,
+            };
             await this.broker.sendMessage(
                 "topping",
-                JSON.stringify(updatedTopping),
+                JSON.stringify(brokerMessage),
+                (updatedTopping?.id as string).toString(),
             );
             res.json({ id: updatedTopping?.id as string });
         } catch (error) {

@@ -2,7 +2,7 @@ import { NextFunction, Response } from "express";
 import { validationResult } from "express-validator";
 import createHttpError from "http-errors";
 import ProductService from "./product-service";
-import { Filter, Product } from "./product-type";
+import { Filter, PoductEvents, Product } from "./product-type";
 import { UploadedFile } from "express-fileupload";
 import { v4 as uuidv4 } from "uuid";
 import { FileStorage } from "../common/types/storage";
@@ -13,6 +13,7 @@ import { Logger } from "winston";
 import { MessageProducerBroker } from "../common/types/broker";
 import { Request } from "express-jwt";
 import { mapToObject } from "../util";
+import config from "config";
 
 export default class ProductController {
     constructor(
@@ -57,12 +58,9 @@ export default class ProductController {
         };
         try {
             const newProduct = await this.ProductService.createProduct(product);
-
-            // Send product to kafka
-            // Todo : mover topic name to config
-            await this.broker.sendMessage(
-                "product",
-                JSON.stringify({
+            const brokerMessage = {
+                event_type: PoductEvents.PRODUCT_CREATE,
+                data: {
                     id: newProduct._id,
                     // Todo: Fix the typescript error
                     priceConfiguration: mapToObject(
@@ -71,7 +69,14 @@ export default class ProductController {
                             any
                         >,
                     ),
-                }),
+                },
+            };
+            // Send product to kafka
+            // Todo : mover topic name to config
+            await this.broker.sendMessage(
+                config.get("kafka.product_topic"),
+                JSON.stringify(brokerMessage),
+                newProduct?._id.toString(),
             );
             // todo => send response
             res.json({ id: newProduct._id });
@@ -165,10 +170,9 @@ export default class ProductController {
             );
 
             // Send product to kafka
-            // Todo : move topic name to the config
-            await this.broker.sendMessage(
-                "product",
-                JSON.stringify({
+            const brokerMessage = {
+                event_type: PoductEvents.PRODUCT_UPDATE,
+                data: {
                     id: updatedProduct?._id,
                     // Todo: Fix the typescript error
                     priceConfiguration: mapToObject(
@@ -177,7 +181,13 @@ export default class ProductController {
                             any
                         >,
                     ),
-                }),
+                },
+            };
+            // Todo : move topic name to the config
+            await this.broker.sendMessage(
+                config.get("kafka.product_topic"),
+                JSON.stringify(brokerMessage),
+                updatedProduct?._id.toString(),
             );
             res.json({ id });
         } catch (error) {

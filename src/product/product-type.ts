@@ -21,3 +21,9 @@ export interface PageinateQuery {
     page: number;
     limit: number;
 }
+
+export enum PoductEvents {
+    PRODUCT_CREATE = "PRODUCT_CREATE",
+    PRODUCT_UPDATE = "PRODUCT_UPDATE",
+    PRODUCT_DELETE = "PRODUCT_DELETE",
+}
