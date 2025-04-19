@@ -5,14 +5,19 @@ import toppingRouter from "./topping/topping-router";
 import globalErrorHandler from "./common/middleware/globalErrorHandler";
 import cookieParser from "cookie-parser";
 import cors from "cors";
+import config from "config";
 const app = express();
 
 app.use(express.json());
 app.use(cookieParser());
 
+const ALLOWED_DOMAINS = [
+    config.get("frontend.adminUI"),
+    config.get("frontend.clientUI"),
+];
 app.use(
     cors({
-        origin: ["http://localhost:5173", "http://localhost:3000"],
+        origin: ALLOWED_DOMAINS as string[],
         methods: ["GET", "POST", "DELETE", "PUT", "PATCH"],
         credentials: true,
     }),
