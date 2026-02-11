@@ -21,6 +21,10 @@ app.use(
     }),
 );
 
+app.use("/health", (req, res) => {
+    res.send({ message: true });
+});
+
 app.use("/categories", categoryRouter);
 app.use("/products", productRouter);
 app.use("/toppings", toppingRouter);
