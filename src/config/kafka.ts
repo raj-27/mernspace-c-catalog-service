@@ -1,6 +1,7 @@
 import { Kafka, KafkaConfig, Producer } from "kafkajs";
 import { MessageProducerBroker } from "../common/types/broker";
-import config from "config";
+import { Config } from ".";
+
 export class KafkaProducerBroker implements MessageProducerBroker {
     private producer: Producer;
 
@@ -17,8 +18,8 @@ export class KafkaProducerBroker implements MessageProducerBroker {
                 connectionTimeout: 45000,
                 sasl: {
                     mechanism: "plain",
-                    username: config.get("kafka.sasl.username"),
-                    password: config.get("kafka.sasl.password"),
+                    username: Config.KAFKA_SASL_USERNAME!,
+                    password: Config.KAFKA_SASL_PASSWORD!,
                 },
             };
         }
@@ -44,9 +45,9 @@ export class KafkaProducerBroker implements MessageProducerBroker {
     }
 
     /**
-     * @param topic - the topic to send the message to
-     * @param message - the message to send
-     * @throws {Error}- when the producer is not connected
+     * @param topic - The topic to send the message to
+     * @param message - The message to send
+     * @throws {Error}- When the producer is not connected
      */
     async sendMessage(topic: string, message: string, key?: string) {
         const data: { value: string; key?: string } = {

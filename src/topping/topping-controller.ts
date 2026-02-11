@@ -172,13 +172,17 @@ export default class ToppingController {
                 },
             );
 
-            const finalToppings = (toppingList.data as Topping[]).map(
-                (topping: Topping) => {
-                    return {
-                        ...topping,
-                        image: this.storage.getObjectUri(topping.image),
-                    };
-                },
+            const finalToppings = await Promise.all(
+                (toppingList.data as Topping[]).map(
+                    async (topping: Topping) => {
+                        return {
+                            ...topping,
+                            image: await this.storage.getObjectUri(
+                                topping.image,
+                            ),
+                        };
+                    },
+                ),
             );
             return res.json({
                 data: finalToppings,

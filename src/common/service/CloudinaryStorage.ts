@@ -1,13 +1,13 @@
 import { v2 as cloudinary } from "cloudinary";
 import { FileData, FileStorage } from "../types/storage";
-import config from "config";
 import createHttpError from "http-errors";
 import { Readable } from "stream";
+import { Config } from "../../config/index";
 
 cloudinary.config({
-    cloud_name: config.get("cloudinary.cloud_name"),
-    api_secret: config.get("cloudinary.api_secret"),
-    api_key: config.get("cloudinary.api_key"),
+    cloud_name: Config.CLOUDINARY_NAME,
+    api_secret: Config.CLOUDINARY_SECRET,
+    api_key: Config.CLOUDINARY_KEY,
 });
 
 export default cloudinary;
@@ -16,7 +16,7 @@ export class CloudinaryStorage implements FileStorage {
     async upload(data: FileData): Promise<void> {
         const { fileData, filename } = data;
 
-        const bufferData = Buffer.from(fileData);
+        const bufferData = Buffer.from(fileData.toString());
         return new Promise((resolve) => {
             // Create a readable stream from the buffer
             const readableStream = new Readable();
@@ -45,7 +45,7 @@ export class CloudinaryStorage implements FileStorage {
     async delete(filename: string): Promise<void> {
         await cloudinary.uploader.destroy(filename);
     }
-    getObjectUri(filename: string): string {
+    async getObjectUri(filename: string): Promise<string> {
         try {
             const imageUrl = cloudinary.url(
                 `product-image/${filename.split(".")[0]}`,

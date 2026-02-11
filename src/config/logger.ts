@@ -4,6 +4,11 @@ const logger = winston.createLogger({
     level: "info",
     defaultMeta: {
         serviceName: "catalog-service",
+        environment: process.env.NODE_ENV, // dev / staging / production
+        version: process.env.npm_package_version, // app version
+        hostname: require("os").hostname(), // container or machine host
+        pid: process.pid, // process ID
+        instanceId: process.env.INSTANCE_ID || null, // for horizontal scaling
     },
     transports: [
         new winston.transports.File({

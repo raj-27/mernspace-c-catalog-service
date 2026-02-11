@@ -13,7 +13,7 @@ import { Logger } from "winston";
 import { MessageProducerBroker } from "../common/types/broker";
 import { Request } from "express-jwt";
 import { mapToObject } from "../util";
-import config from "config";
+import { Config } from "../config";
 
 export default class ProductController {
     constructor(
@@ -30,10 +30,20 @@ export default class ProductController {
         }
         const img = req.files!.image as UploadedFile;
         const imageName = uuidv4();
-        await this.storage.upload({
-            filename: imageName,
-            fileData: img.data.buffer,
-        });
+        try {
+            await this.storage.upload({
+                filename: imageName,
+                fileData: img.data.buffer,
+            });
+        } catch (error) {
+            return next(
+                createHttpError(
+                    400,
+                    "Error occur while uploading images to cloudinary",
+                ),
+            );
+        }
+
         // create product
         // todo => save product to database
         const {
@@ -74,7 +84,7 @@ export default class ProductController {
             // Send product to kafka
             // Todo : mover topic name to config
             await this.broker.sendMessage(
-                config.get("kafka.product_topic"),
+                Config.KAFKA_PRODUCT_TOPIC!,
                 JSON.stringify(brokerMessage),
                 newProduct?._id.toString(),
             );
@@ -185,7 +195,7 @@ export default class ProductController {
             };
             // Todo : move topic name to the config
             await this.broker.sendMessage(
-                config.get("kafka.product_topic"),
+                Config.KAFKA_PRODUCT_TOPIC!,
                 JSON.stringify(brokerMessage),
                 updatedProduct?._id.toString(),
             );
@@ -229,15 +239,19 @@ export default class ProductController {
                     limit: parseInt(limit as string) || 10,
                 },
             );
-            const finalProducts = (productList.data as Product[]).map(
-                (product: Product) => {
-                    return {
-                        ...product,
-                        image: this.storage.getObjectUri(product.image),
-                    };
-                },
+            const finalProducts = await Promise.all(
+                (productList.data as Product[]).map(
+                    async (product: Product) => {
+                        return {
+                            ...product,
+                            image: await this.storage.getObjectUri(
+                                product.image,
+                            ),
+                        };
+                    },
+                ),
             );
-
+            this.logger.info("Product fetched successfully");
             res.json({
                 data: finalProducts,
                 total: productList.total,

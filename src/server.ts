@@ -1,12 +1,14 @@
 import app from "./app";
 import { createMessageProducerBroker } from "./common/factories/brokerFactory";
+// import { createMessageProducerBroker } from "./common/factories/brokerFactory";
 import { MessageProducerBroker } from "./common/types/broker";
+import { Config } from "./config";
 import { initDb } from "./config/db";
 import logger from "./config/logger";
-import config from "config";
 
 const startServer = async () => {
-    const PORT: number = config.get("server.port") || 5510;
+    console.log(Number(Config.PORT), Config.KAFKA_BROKERS);
+    const PORT: number = Number(Config.PORT) || 5510;
     let MessageProducerBroker: MessageProducerBroker | null = null;
     try {
         await initDb();

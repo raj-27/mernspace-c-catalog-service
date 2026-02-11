@@ -1,10 +1,13 @@
-import mongoose from "mongoose";
+import mongoose, { Schema, Document } from "mongoose";
 import { Attribute, Category, PriceConfiguration } from "./category-types";
 
-const priceConfigurationSchema = new mongoose.Schema<PriceConfiguration>({
+// Create an interface that represents a Category Document in MongoDB
+export interface CategoryDocument extends Category, Document {}
+
+const priceConfigurationSchema = new Schema<PriceConfiguration>({
     priceType: {
         type: String,
-        enum: ["base", "aditional"],
+        enum: ["base", "additional"], // Fixed typo: 'aditional' -> 'additional'
         required: true,
     },
     availableOptions: {
@@ -13,7 +16,7 @@ const priceConfigurationSchema = new mongoose.Schema<PriceConfiguration>({
     },
 });
 
-const attributeSchema = new mongoose.Schema<Attribute>({
+const attributeSchema = new Schema<Attribute>({
     name: {
         type: String,
         required: true,
@@ -21,10 +24,10 @@ const attributeSchema = new mongoose.Schema<Attribute>({
     widgetType: {
         type: String,
         enum: ["switch", "radio"],
-        require: true,
+        required: true, // Fixed typo: 'require' -> 'required'
     },
     defaultValue: {
-        type: mongoose.Schema.Types.Mixed,
+        type: Schema.Types.Mixed,
         required: true,
     },
     availableOptions: {
@@ -33,7 +36,8 @@ const attributeSchema = new mongoose.Schema<Attribute>({
     },
 });
 
-const categorySchema = new mongoose.Schema<Category>(
+// Use the Document interface here
+const categorySchema = new Schema<CategoryDocument>(
     {
         name: {
             type: String,
@@ -52,4 +56,4 @@ const categorySchema = new mongoose.Schema<Category>(
     { timestamps: true },
 );
 
-export default mongoose.model("Category", categorySchema);
+export default mongoose.model<CategoryDocument>("Category", categorySchema);
