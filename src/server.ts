@@ -15,7 +15,9 @@ const startServer = async () => {
         logger.info("Database connected successfully");
         // Connect to kafka
         MessageProducerBroker = createMessageProducerBroker();
-        await MessageProducerBroker.connect();
+        await MessageProducerBroker.connect()
+            .then((res) => logger.info("Connected to kafka"))
+            .catch((err) => logger.error("Error while connection kafka"));
         app.listen(PORT, () => logger.info(`listening on port ${PORT}`));
     } catch (err) {
         if (err instanceof Error) {
