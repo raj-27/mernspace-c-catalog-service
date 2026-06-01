@@ -3,6 +3,7 @@ import { FileData, FileStorage } from "../types/storage";
 import createHttpError from "http-errors";
 import { Readable } from "stream";
 import { Config } from "../../config/index";
+import { Logger } from "winston";
 
 cloudinary.config({
     cloud_name: Config.CLOUDINARY_NAME,
@@ -13,35 +14,75 @@ cloudinary.config({
 export default cloudinary;
 
 export class CloudinaryStorage implements FileStorage {
+    constructor(private logger: Logger) {}
+
     async upload(data: FileData): Promise<void> {
         const { fileData, filename } = data;
 
-        const bufferData = Buffer.from(fileData.toString());
-        return new Promise((resolve) => {
-            // Create a readable stream from the buffer
-            const readableStream = new Readable();
-            readableStream.push(bufferData);
-            readableStream.push(null); // Indicate end of the stream
-            void cloudinary.uploader
-                .upload(`image/${filename}.jpg`)
-                .then()
-                .catch();
+        try {
+            this.logger.info("Starting image upload", { filename });
 
-            const stream = cloudinary.uploader.upload_stream(
-                {
-                    public_id: `product-image/${filename.split(".")[0]}`,
-                    resource_type: "image",
-                },
-                (err) => {
-                    if (err) {
-                        throw createHttpError(400, err.message);
-                    }
-                    resolve();
-                },
+            let bufferData: Buffer;
+
+            // 🔹 Case 1: Already Buffer
+            if (Buffer.isBuffer(fileData)) {
+                bufferData = fileData;
+            }
+
+            // 🔹 Case 2: number[]
+            else if (Array.isArray(fileData)) {
+                bufferData = Buffer.from(fileData);
+            }
+
+            // 🔹 Case 3: { data: number[] }
+            else if (
+                typeof fileData === "object" &&
+                fileData !== null &&
+                "data" in fileData &&
+                Array.isArray((fileData as any).data)
+            ) {
+                bufferData = Buffer.from((fileData as any).data);
+            }
+
+            // 🔹 Case 4: base64 string
+            else if (typeof fileData === "string") {
+                const base64Data = fileData.replace(
+                    /^data:image\/\w+;base64,/,
+                    "",
+                );
+                bufferData = Buffer.from(base64Data, "base64");
+            } else {
+                this.logger.warn("Unsupported file format", {
+                    type: typeof fileData,
+                });
+                throw createHttpError(400, "Invalid image file");
+            }
+
+            await new Promise<void>((resolve, reject) => {
+                const stream = cloudinary.uploader.upload_stream(
+                    {
+                        public_id: `product-image/${filename}`,
+                        resource_type: "image",
+                    },
+                    (error, result) => {
+                        if (error) {
+                            return reject(createHttpError(400, error.message));
+                        }
+                        resolve();
+                    },
+                );
+
+                Readable.from(bufferData).pipe(stream);
+            });
+        } catch (error: any) {
+            this.logger.error("Upload failed", { error: error.message });
+            throw createHttpError(
+                error.status || 500,
+                error.message || "Image upload failed",
             );
-            readableStream.pipe(stream);
-        });
+        }
     }
+
     async delete(filename: string): Promise<void> {
         await cloudinary.uploader.destroy(filename);
     }

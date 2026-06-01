@@ -4,6 +4,7 @@ import createHttpError from "http-errors";
 import { Category } from "./category-types";
 import CategoryService from "./category-service";
 import { Logger } from "winston";
+import logger from "../config/logger";
 
 export default class CategoryController {
     constructor(
@@ -37,6 +38,7 @@ export default class CategoryController {
 
     async getCategories(req: Request, res: Response, next: NextFunction) {
         try {
+            logger.info("Get categories invoked");
             const categories = await this.categoryService.getAll();
             res.json({ categories, count: categories.length });
         } catch (error) {

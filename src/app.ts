@@ -5,7 +5,6 @@ import toppingRouter from "./topping/topping-router";
 import globalErrorHandler from "./common/middleware/globalErrorHandler";
 import cookieParser from "cookie-parser";
 import cors from "cors";
-import config from "config";
 import { Config } from "./config";
 const app = express();
 

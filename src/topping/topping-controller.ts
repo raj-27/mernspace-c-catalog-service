@@ -9,12 +9,14 @@ import { validationResult } from "express-validator";
 import { AuthRequest } from "../common/types";
 import { Roles } from "../common/constants";
 import { MessageProducerBroker } from "../common/types/broker";
+import { Logger } from "winston";
 
 export default class ToppingController {
     constructor(
         private ToppingService: ToppingService,
         private storage: FileStorage,
         private broker: MessageProducerBroker,
+        private logger: Logger,
     ) {}
 
     async create(req: Request, res: Response, next: NextFunction) {
@@ -38,6 +40,12 @@ export default class ToppingController {
                     );
                 }
             }
+
+            this.logger.info("Request File", {
+                Files: req.files!.image,
+            });
+
+            var _img = req.files!.image;
 
             const img = req.files!.image as UploadedFile;
             const imageName = uuidv4();

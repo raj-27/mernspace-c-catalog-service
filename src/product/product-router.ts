@@ -12,7 +12,7 @@ import FileUploadMiddleware from "../common/middleware/fileUpload";
 import { createMessageProducerBroker } from "../common/factories/brokerFactory";
 
 const productService = new ProductService();
-const cloudinaryStorage = new CloudinaryStorage();
+const cloudinaryStorage = new CloudinaryStorage(logger);
 const broker = createMessageProducerBroker();
 const productControler = new ProductController(
     productService,
