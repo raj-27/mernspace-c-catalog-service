@@ -21,7 +21,7 @@ app.use(
 );
 
 app.use("/health", (req, res) => {
-    res.send({ message: true });
+    res.send({ status: true, message: "Hello From Catalog Service" });
 });
 
 app.use("/categories", categoryRouter);
